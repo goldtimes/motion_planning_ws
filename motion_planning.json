@@ -1,0 +1,62 @@
+{
+  "session_name": "mobilebase",
+  "windows": [
+    {
+      "window_name": "dev window 1",
+      "layout": "tiled",
+      "shell_command_before": [
+        "export export TURTLEBOT3_MODEL=burger",
+        "source ~/navigation_ws/devel/setup.zsh"
+      ],
+      "panes": [
+        {
+          "shell_command": [
+            "roscore"
+          ]
+        },
+        {
+          "shell_command": [
+            "sleep 2",
+            "roslaunch turtlebot3 turtlebot3_world.launch"
+          ]
+        },
+        {
+          "shell_command": [
+            "sleep 3"
+          ]
+        },
+        {
+          "shell_command": [
+            "sleep 4"
+          ]
+        }
+      ]
+    },
+    {
+      "window_name": "dev window 2",
+      "layout": "tiled",
+      "shell_command_before": [
+        "export export TURTLEBOT3_MODEL=burger",
+        "source ~/navigation_ws/devel/setup.zsh"
+      ],
+      "panes": [
+        {
+          "shell_command": [
+            "sleep 5"
+          ]
+        },
+        {
+          "shell_command": [
+            "sleep 6"
+          ]
+        },
+        {
+          "shell_command": []
+        },
+        {
+          "shell_command": []
+        }
+      ]
+    }
+  ]
+}

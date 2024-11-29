@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+    <name>motion_planning</name>
+    <version>1.17.3</version>
+    <description>
+       global_planner and local_planner
+    </description>
+    <maintainer email="1019825699@qq.com">lihang</maintainer>
+    <author>019825699@qq.com</author>
+    <license>BSD,LGPL,LGPL (amcl)</license>  
+    <buildtool_depend>catkin</buildtool_depend>
+    <exec_depend>global_planner</exec_depend>
+    <export>
+        <metapackage/>
+    </export>
+</package>

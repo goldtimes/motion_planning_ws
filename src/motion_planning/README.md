@@ -1,0 +1,2 @@
+# motion_planning 
+计划是做一个移动机器人规划和机械臂规划的仓库，仿真方面我们就不研究了，使用了turtlebot3的gazebo世界和官方的urdf。motion_planning是一个元数据包，因为我们还是继承ros的global和local plan的框架。
