@@ -21,8 +21,6 @@
   <depend>roscpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
-  <depend>voronoi_layer</depend>
-  <depend>common</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

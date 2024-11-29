@@ -1,9 +1,14 @@
 #include "global_planner/global_planner_node.hh"
 #include <ros/node_handle.h>
+#include <tf2/utils.h>
 #include <visualization_msgs/MarkerArray.h>
-#include "global_planner/global_planner.hh"
+#include <mutex>
+#include "costmap_2d/costmap_2d.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "global_planner/graph_planner/astar_planner.hh"
+#include "global_planner/visualizer.hh"
 #include "pluginlib/class_list_macros.hpp"
+#include "ros/time.h"
 
 PLUGINLIB_EXPORT_CLASS(mp::global_planner::GlobalPlannerNode, nav_core::BaseGlobalPlanner);
 
@@ -76,6 +81,111 @@ bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const 
 // 真正的规划全局路径的地方
 bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                                  double tolerance, std::vector<geometry_msgs::PoseStamped>& plan) {
+    // 加锁
+    std::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*g_planner_->getCostMap()->getMutex());
+    if (!initialized_) {
+        ROS_ERROR(
+            "This planner has not been initialized yet, but it is being used, please call initialize() before use");
+        return false;
+    }
+    // clear existing plan
+    plan.clear();
+    // 判断frame_id是否相同
+    if (goal.header.frame_id != frame_id_) {
+        ROS_ERROR("The goal pose passed to this planner must be in the %s frame. It is instead in the %s frame.",
+                  frame_id_.c_str(), goal.header.frame_id.c_str());
+        return false;
+    }
+
+    if (start.header.frame_id != frame_id_) {
+        ROS_ERROR("The start pose passed to this planner must be in the %s frame. It is instead in the %s frame.",
+                  frame_id_.c_str(), start.header.frame_id.c_str());
+        return false;
+    }
+    double wx = start.pose.position.x, wy = start.pose.position.y;
+    double g_start_x, g_start_y, g_goal_x, g_goal_y;
+    // 起始位姿不再地图当中
+    if (!g_planner_->world2Map(wx, wy, g_start_x, g_start_y)) {
+        ROS_WARN(
+            "The robot's start position is off the global costmap. Planning will always fail, are you sure the robot "
+            "has "
+            "been properly localized?");
+        return false;
+    }
+    // 终点位姿不在地图中
+    wx = goal.pose.position.x, wy = goal.pose.position.y;
+    if (!g_planner_->world2Map(wx, wy, g_goal_x, g_goal_y)) {
+        ROS_WARN_THROTTLE(1.0,
+                          "The goal sent to the global planner is off the global costmap. Planning will always fail to "
+                          "this goal.");
+        return false;
+    }
+    if (is_outlier_) {
+        g_planner_->outlierMap();
+    }
+    // 规划
+    GlobalPlanner::Points3d origin_path;
+    GlobalPlanner::Points3d expand;
+    bool path_found = false;
+    path_found = g_planner_->plan({g_start_x, g_start_y, tf2::getYaw(start.pose.orientation)},
+                                  {g_goal_x, g_goal_y, tf2::getYaw(goal.pose.orientation)}, origin_path, expand);
+    if (path_found) {
+        // 将规划得到的路径转换为ros path
+        if (_getPlanFromPath(origin_path, plan)) {
+            geometry_msgs::PoseStamped goalCopy = goal;
+            goalCopy.header.stamp = ros::Time::now();
+            plan.push_back(goalCopy);
+            GlobalPlanner::Points3d origin_plan, prune_plan;
+            // 遍历所有的找到的点
+            for (const auto& pt : plan) {
+                origin_plan.emplace_back(pt.pose.position.x, pt.pose.position.y);
+            }
+            // 可视化
+            const auto& visualizer = mp::global_planner::common::VisualizerPtr::Instance();
+            if (is_expand_) {
+                if (planner_type_ == PLANNER_TYPE::GRAPH_PLANNER) {
+                    // 发布expand地图
+                    visualizer->publishExpandZone(expand, costmap_ros_->getCostmap(), expand_pub_, frame_id_);
+                }
+            }
+            // 可视化路径
+            visualizer->publishPath(plan, plan_pub_, frame_id_);
+        } else {
+            ROS_ERROR("Failed to get a plan from path when a legal path was found. This shouldn't happen.");
+        }
+
+    } else {
+        ROS_ERROR("Failed to get a path.");
+    }
+    return !plan.empty();
+}
+
+bool GlobalPlannerNode::_getPlanFromPath(GlobalPlanner::Points3d& path, std::vector<geometry_msgs::PoseStamped>& plan) {
+    if (!initialized_) {
+        ROS_ERROR(
+            "This planner has not been initialized yet, but it is being used, please call initialize() before use");
+        return false;
+    }
+    plan.clear();
+    for (const auto& pt : path) {
+        double wx, wy;
+        g_planner_->map2World(pt.x(), pt.y(), wx, wy);
+
+        // coding as message type
+        geometry_msgs::PoseStamped pose;
+        pose.header.stamp = ros::Time::now();
+        pose.header.frame_id = frame_id_;
+        pose.pose.position.x = wx;
+        pose.pose.position.y = wy;
+        pose.pose.position.z = 0.0;
+        pose.pose.orientation.x = 0.0;
+        pose.pose.orientation.y = 0.0;
+        pose.pose.orientation.z = 0.0;
+        pose.pose.orientation.w = 1.0;
+        plan.push_back(pose);
+    }
+
+    return !plan.empty();
 }
 
 }  // namespace mp::global_planner

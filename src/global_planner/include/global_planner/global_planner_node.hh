@@ -9,12 +9,11 @@
 #include <memory>
 #include <string>
 #include "costmap_2d/costmap_2d_ros.h"
+#include "global_planner/global_planner.hh"
 #include "ros/publisher.h"
 #include "ros/service_server.h"
 
 namespace mp::global_planner {
-// 前置声明
-class GlobalPlanner;
 
 class GlobalPlannerNode : public nav_core::BaseGlobalPlanner {
    public:
@@ -36,7 +35,8 @@ class GlobalPlannerNode : public nav_core::BaseGlobalPlanner {
     bool makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp);
 
    protected:
-   private:
+    bool _getPlanFromPath(GlobalPlanner::Points3d& path, std::vector<geometry_msgs::PoseStamped>& plan);
+
    protected:
     // 三种路径搜索的枚举
     enum class PLANNER_TYPE {

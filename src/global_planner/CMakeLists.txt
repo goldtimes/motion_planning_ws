@@ -14,8 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
   tf2_geometry_msgs
   tf2_ros
-  voronoi_layer
-  common
 )
 
 

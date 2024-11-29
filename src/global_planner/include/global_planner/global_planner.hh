@@ -5,7 +5,6 @@
 #include <ros/ros.h>
 #include <unordered_map>
 #include <vector>
-#include "global_planner_node.hh"
 #include "node.hh"
 #include "point.hh"
 
