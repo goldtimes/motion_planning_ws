@@ -11,6 +11,7 @@
     <license>BSD,LGPL,LGPL (amcl)</license>  
     <buildtool_depend>catkin</buildtool_depend>
     <exec_depend>global_planner</exec_depend>
+    <exec_depend>dwa_controller</exec_depend>
     <export>
         <metapackage/>
     </export>
