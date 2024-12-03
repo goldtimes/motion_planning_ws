@@ -71,6 +71,7 @@ catkin_package(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}_node
   src/dwa_controller.cc
+  src/dwa.cc
 )
 
 ## Add cmake target dependencies of the library
