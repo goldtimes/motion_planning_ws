@@ -1,31 +1,31 @@
-#include "global_planner/global_planner_node.hh"
-#include <ros/node_handle.h>
+#include "path_planner/path_planner_node.hh"
+#include <ros/ros.h>
 #include <tf2/utils.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <mutex>
 #include "costmap_2d/costmap_2d.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "global_planner/graph_planner/astar_planner.hh"
-#include "global_planner/visualizer.hh"
+#include "path_planner/graph_planner/astar_planner.hh"
+#include "path_planner/visualizer.hh"
 #include "pluginlib/class_list_macros.hpp"
 #include "ros/time.h"
 
-PLUGINLIB_EXPORT_CLASS(mp::global_planner::GlobalPlannerNode, nav_core::BaseGlobalPlanner);
+PLUGINLIB_EXPORT_CLASS(mp::path_planner::PathPlannerNode, nav_core::BaseGlobalPlanner);
 
-namespace mp::global_planner {
-GlobalPlannerNode::GlobalPlannerNode() : initialized_(false), g_planner_(nullptr) {
+namespace mp::path_planner {
+PathPlannerNode::PathPlannerNode() : initialized_(false), g_planner_(nullptr) {
 }
 
-GlobalPlannerNode::GlobalPlannerNode(std::string name, costmap_2d::Costmap2DROS* costmap_ros) : GlobalPlannerNode() {
+PathPlannerNode::PathPlannerNode(std::string name, costmap_2d::Costmap2DROS* costmap_ros) : PathPlannerNode() {
     initialize(name, costmap_ros);
 }
 
-void GlobalPlannerNode::initialize(std::string name, costmap_2d::Costmap2DROS* costmapRos) {
+void PathPlannerNode::initialize(std::string name, costmap_2d::Costmap2DROS* costmapRos) {
     costmap_ros_ = costmapRos;
     initialize(name);
 }
 
-void GlobalPlannerNode::initialize(std::string name) {
+void PathPlannerNode::initialize(std::string name) {
     // 初始化ros pub service
     // 初始化全局规划器
     if (!initialized_) {
@@ -59,13 +59,13 @@ void GlobalPlannerNode::initialize(std::string name) {
         // 可视化搜索的区域
         expand_pub_ = priv_nh.advertise<nav_msgs::OccupancyGrid>("expand", 1);
         // register planning service
-        make_plan_srv_ = priv_nh.advertiseService("make_plan", &GlobalPlannerNode::makePlanService, this);
+        make_plan_srv_ = priv_nh.advertiseService("make_plan", &PathPlannerNode::makePlanService, this);
     } else {
         ROS_WARN("This planner has already been initialized, you can't call it twice, doing nothing");
     }
 }
 
-bool GlobalPlannerNode::makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp) {
+bool PathPlannerNode::makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp) {
     makePlan(req.start, req.goal, resp.plan.poses);
     resp.plan.header.stamp = ros::Time::now();
     resp.plan.header.frame_id = frame_id_;
@@ -73,14 +73,14 @@ bool GlobalPlannerNode::makePlanService(nav_msgs::GetPlan::Request& req, nav_msg
     return true;
 }
 
-bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                                 std::vector<geometry_msgs::PoseStamped>& plan) {
+bool PathPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+                               std::vector<geometry_msgs::PoseStamped>& plan) {
     return makePlan(start, goal, tolerance_, plan);
 }
 
 // 真正的规划全局路径的地方
-bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                                 double tolerance, std::vector<geometry_msgs::PoseStamped>& plan) {
+bool PathPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+                               double tolerance, std::vector<geometry_msgs::PoseStamped>& plan) {
     // 加锁
     std::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*g_planner_->getCostMap()->getMutex());
     if (!initialized_) {
@@ -124,8 +124,8 @@ bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const 
         g_planner_->outlierMap();
     }
     // 规划
-    GlobalPlanner::Points3d origin_path;
-    GlobalPlanner::Points3d expand;
+    PathPlanner::Points3d origin_path;
+    PathPlanner::Points3d expand;
     bool path_found = false;
     path_found = g_planner_->plan({g_start_x, g_start_y, tf2::getYaw(start.pose.orientation)},
                                   {g_goal_x, g_goal_y, tf2::getYaw(goal.pose.orientation)}, origin_path, expand);
@@ -135,13 +135,13 @@ bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const 
             geometry_msgs::PoseStamped goalCopy = goal;
             goalCopy.header.stamp = ros::Time::now();
             plan.push_back(goalCopy);
-            GlobalPlanner::Points3d origin_plan, prune_plan;
+            PathPlanner::Points3d origin_plan, prune_plan;
             // 遍历所有的找到的点
             for (const auto& pt : plan) {
                 origin_plan.emplace_back(pt.pose.position.x, pt.pose.position.y);
             }
             // 可视化
-            const auto& visualizer = mp::global_planner::common::VisualizerPtr::Instance();
+            const auto& visualizer = mp::path_planner::common::VisualizerPtr::Instance();
             if (is_expand_) {
                 if (planner_type_ == PLANNER_TYPE::GRAPH_PLANNER) {
                     // 发布expand地图
@@ -149,7 +149,7 @@ bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const 
                 }
             }
             // 可视化路径
-            visualizer->publishPath(plan, plan_pub_, frame_id_);
+            visualizer->publishPath(origin_plan, plan_pub_, frame_id_);
         } else {
             ROS_ERROR("Failed to get a plan from path when a legal path was found. This shouldn't happen.");
         }
@@ -160,7 +160,7 @@ bool GlobalPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const 
     return !plan.empty();
 }
 
-bool GlobalPlannerNode::_getPlanFromPath(GlobalPlanner::Points3d& path, std::vector<geometry_msgs::PoseStamped>& plan) {
+bool PathPlannerNode::_getPlanFromPath(PathPlanner::Points3d& path, std::vector<geometry_msgs::PoseStamped>& plan) {
     if (!initialized_) {
         ROS_ERROR(
             "This planner has not been initialized yet, but it is being used, please call initialize() before use");
@@ -188,4 +188,4 @@ bool GlobalPlannerNode::_getPlanFromPath(GlobalPlanner::Points3d& path, std::vec
     return !plan.empty();
 }
 
-}  // namespace mp::global_planner
+}  // namespace mp::path_planner

@@ -4,7 +4,7 @@ A*是一种启发式的搜索，和dijkstra是一种没有启发的搜索，也�
 */
 #pragma once
 
-namespace mp::global_planner::common {
+namespace mp::path_planner::common {
 
 template <typename T>
 class Node {
@@ -100,7 +100,7 @@ class Node {
      * @brief Struct created to encapsulate function compare cost between 2 Nodes.
      *        Used in with multiple algorithms and classes
      */
-    
+
     struct compare_cost {
         /**
          * @brief Compare cost between 2 nodes
@@ -140,4 +140,4 @@ class Node {
     int id_;
     int parent_id_;
 };
-}  // namespace mp::global_planner::common
+}  // namespace mp::path_planner::common

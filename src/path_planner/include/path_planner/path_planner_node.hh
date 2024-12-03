@@ -9,18 +9,18 @@
 #include <memory>
 #include <string>
 #include "costmap_2d/costmap_2d_ros.h"
-#include "global_planner/global_planner.hh"
+#include "path_planner.hh"
 #include "ros/publisher.h"
 #include "ros/service_server.h"
 
-namespace mp::global_planner {
+namespace mp::path_planner {
 
-class GlobalPlannerNode : public nav_core::BaseGlobalPlanner {
+class PathPlannerNode : public nav_core::BaseGlobalPlanner {
    public:
     // 构造函数
-    GlobalPlannerNode();
-    GlobalPlannerNode(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
-    ~GlobalPlannerNode() = default;
+    PathPlannerNode();
+    PathPlannerNode(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
+    ~PathPlannerNode() = default;
     void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros) override;
     void initialize(std::string name);
     bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
@@ -35,7 +35,7 @@ class GlobalPlannerNode : public nav_core::BaseGlobalPlanner {
     bool makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp);
 
    protected:
-    bool _getPlanFromPath(GlobalPlanner::Points3d& path, std::vector<geometry_msgs::PoseStamped>& plan);
+    bool _getPlanFromPath(PathPlanner::Points3d& path, std::vector<geometry_msgs::PoseStamped>& plan);
 
    protected:
     // 三种路径搜索的枚举
@@ -55,7 +55,7 @@ class GlobalPlannerNode : public nav_core::BaseGlobalPlanner {
     // 全局规划器的名字
     std::string planner_name_;
     // 全局规划器的实现
-    std::shared_ptr<GlobalPlanner> g_planner_;
+    std::shared_ptr<PathPlanner> g_planner_;
     // 全局路径发布
     ros::Publisher plan_pub_;
     // 探索的路径发布
@@ -79,4 +79,4 @@ class GlobalPlannerNode : public nav_core::BaseGlobalPlanner {
     // 障碍物的膨胀系数
     double factor_;
 };
-}  // namespace mp::global_planner
+}  // namespace mp::path_planner

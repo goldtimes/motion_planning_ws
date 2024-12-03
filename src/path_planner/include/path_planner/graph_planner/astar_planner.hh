@@ -1,13 +1,13 @@
 #pragma once
 #include <cmath>
 #include <vector>
-#include "../global_planner.hh"
+#include "../path_planner.hh"
 #include "costmap_2d/costmap_2d_ros.h"
 
-namespace mp::global_planner {
-class AstarGlobalPlanner : public GlobalPlanner {
+namespace mp::path_planner {
+class AstarGlobalPlanner : public PathPlanner {
    public:
-    using Node = mp::global_planner::common::Node<int>;
+    using Node = mp::path_planner::common::Node<int>;
 
     explicit AstarGlobalPlanner(costmap_2d::Costmap2DROS* costmap_ros, bool dijstra = false, bool gbfs = false);
 
@@ -31,4 +31,4 @@ class AstarGlobalPlanner : public GlobalPlanner {
                                         {-1, 0, 1.0},          {1, 1, std::sqrt(2)},  {1, -1, std::sqrt(2)},
                                         {-1, 1, std::sqrt(2)}, {-1, -1, std::sqrt(2)}};
 };
-}  // namespace mp::global_planner
+}  // namespace mp::path_planner

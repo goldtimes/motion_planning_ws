@@ -8,21 +8,21 @@
 #include "node.hh"
 #include "point.hh"
 
-namespace mp::global_planner {
-class GlobalPlanner {
+namespace mp::path_planner {
+class PathPlanner {
    public:
-    using Point2d = mp::global_planner::common::Point2d;
-    using Point3d = mp::global_planner::common::Point3d;
-    using Points2d = mp::global_planner::common::Points2d;
-    using Points3d = mp::global_planner::common::Points3d;
+    using Point2d = mp::path_planner::common::Point2d;
+    using Point3d = mp::path_planner::common::Point3d;
+    using Points2d = mp::path_planner::common::Points2d;
+    using Points3d = mp::path_planner::common::Points3d;
 
    public:
-    GlobalPlanner(costmap_2d::Costmap2DROS* costmap_ros)
+    PathPlanner(costmap_2d::Costmap2DROS* costmap_ros)
         : factor_(0.5), map_size_(0), costmap_ros_(costmap_ros), costmap_(costmap_ros->getCostmap()) {
         map_size_ = static_cast<int>(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY());
     }
 
-    virtual ~GlobalPlanner() = default;
+    virtual ~PathPlanner() = default;
 
     virtual bool plan(const Point3d& start, const Point3d& goal, Points3d& path, Points3d& expand) = 0;
 
@@ -122,4 +122,4 @@ class GlobalPlanner {
     costmap_2d::Costmap2DROS* costmap_ros_;
     costmap_2d::Costmap2D* costmap_;
 };
-}  // namespace mp::global_planner
+}  // namespace mp::path_planner

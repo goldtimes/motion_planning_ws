@@ -6,7 +6,7 @@
       "layout": "tiled",
       "shell_command_before": [
         "export export TURTLEBOT3_MODEL=burger",
-        "source ~/navigation_ws/devel/setup.zsh"
+        "source ~/motion_planning_ws/devel/setup.zsh"
       ],
       "panes": [
         {
@@ -37,7 +37,7 @@
       "layout": "tiled",
       "shell_command_before": [
         "export export TURTLEBOT3_MODEL=burger",
-        "source ~/navigation_ws/devel/setup.zsh"
+        "source ~/motion_planning_ws/devel/setup.zsh"
       ],
       "panes": [
         {

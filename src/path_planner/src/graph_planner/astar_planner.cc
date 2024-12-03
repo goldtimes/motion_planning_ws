@@ -1,15 +1,15 @@
-#include "global_planner/graph_planner/astar_planner.hh"
+#include "path_planner/graph_planner/astar_planner.hh"
 #include <cmath>
 #include <queue>
 #include <unordered_map>
 #include <vector>
 #include "costmap_2d/cost_values.h"
-#include "global_planner/global_planner.hh"
+#include "path_planner/path_planner.hh"
 
-namespace mp::global_planner {
+namespace mp::path_planner {
 
 AstarGlobalPlanner::AstarGlobalPlanner(costmap_2d::Costmap2DROS* costmap_ros, bool dijstra, bool gbfs)
-    : GlobalPlanner(costmap_ros) {
+    : PathPlanner(costmap_ros) {
     // 合理的,两个不同时为true
     if (!(dijstra && gbfs)) {
         is_dijstra_ = dijstra;
@@ -91,4 +91,4 @@ bool AstarGlobalPlanner::plan(const Point3d& start, const Point3d& goal, Points3
     }
     return false;
 }
-}  // namespace mp::global_planner
+}  // namespace mp::path_planner

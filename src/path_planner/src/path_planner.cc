@@ -1,30 +1,30 @@
-#include "global_planner/global_planner.hh"
+#include "path_planner/path_planner.hh"
 #include <costmap_2d/cost_values.h>
-namespace mp::global_planner {
-void GlobalPlanner::setFactor(float factor) {
+namespace mp::path_planner {
+void PathPlanner::setFactor(float factor) {
 }
 
-costmap_2d::Costmap2D* GlobalPlanner::getCostMap() const {
+costmap_2d::Costmap2D* PathPlanner::getCostMap() const {
     return costmap_;
 }
 
-int GlobalPlanner::getMapSize() const {
+int PathPlanner::getMapSize() const {
     return map_size_;
 }
 
 // grid的x,y转换为下标
-int GlobalPlanner::grid2Index(int x, int y) {
+int PathPlanner::grid2Index(int x, int y) {
     // x,y为行列数
     return x + static_cast<int>(costmap_->getSizeInCellsX() * y);
 }
 
-void GlobalPlanner::index2Grid(int i, int& x, int& y) {
+void PathPlanner::index2Grid(int i, int& x, int& y) {
     x = static_cast<int>(i % costmap_->getSizeInCellsX());
     y = static_cast<int>(i / costmap_->getSizeInCellsX());
 }
 
 // world to map
-bool GlobalPlanner::world2Map(double wx, double wy, double& mx, double& my) {
+bool PathPlanner::world2Map(double wx, double wy, double& mx, double& my) {
     // 超过了地图的范围
     if (wx < costmap_->getOriginX() || wy < costmap_->getOriginY()) {
         return false;
@@ -37,7 +37,7 @@ bool GlobalPlanner::world2Map(double wx, double wy, double& mx, double& my) {
     return false;
 }
 
-void GlobalPlanner::map2World(double mx, double my, double& wx, double& wy) {
+void PathPlanner::map2World(double mx, double my, double& wx, double& wy) {
     wx = costmap_->getOriginX() + (mx + 0.5) * costmap_->getResolution();
     wy = costmap_->getOriginY() + (my + 0.5) * costmap_->getResolution();
 }
@@ -47,7 +47,7 @@ void GlobalPlanner::map2World(double mx, double my, double& wx, double& wy) {
     0 0 0 0 costmap
 */
 
-void GlobalPlanner::outlierMap() {
+void PathPlanner::outlierMap() {
     // 获取costmap的大小
     auto nx = costmap_->getSizeInCellsX();
     auto ny = costmap_->getSizeInCellsY();
@@ -76,4 +76,4 @@ void GlobalPlanner::outlierMap() {
     }
 }
 
-}  // namespace mp::global_planner
+}  // namespace mp::path_planner

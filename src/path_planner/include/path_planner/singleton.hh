@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-namespace mp::global_planner::common {
+namespace mp::path_planner::common {
 template <typename TSingleton>
 class Singleton {
    public:
@@ -16,7 +16,7 @@ class Singleton {
 
    public:
     static TSingletonPtr& Instance() {
-        static TSingletonPtr instance = std::make_shared<TSingleton>();
+        static TSingletonPtr instance = std::make_unique<TSingleton>();
         return instance;
     }
 };
