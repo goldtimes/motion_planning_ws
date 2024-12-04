@@ -7,9 +7,13 @@
 namespace mp::path_planner {
 class AstarGlobalPlanner : public PathPlanner {
    public:
-    using Node = mp::path_planner::common::Node<int>;
-
-    explicit AstarGlobalPlanner(costmap_2d::Costmap2DROS* costmap_ros, bool dijstra = false, bool gbfs = false);
+    /**
+     * @brief Construct a new AStar object
+     * @param costmap   the environment for path planning
+     * @param dijkstra   using diksktra implementation
+     * @param gbfs       using gbfs implementation
+     */
+    AstarGlobalPlanner(costmap_2d::Costmap2DROS* costmap_ros, bool dijkstra = false, bool gbfs = false);
 
     /**
      * @brief A* implementation
@@ -22,13 +26,13 @@ class AstarGlobalPlanner : public PathPlanner {
     bool plan(const Point3d& start, const Point3d& goal, Points3d& path, Points3d& expand);
 
    private:
-    // dijstra算法
-    bool is_dijstra_;
-    // 贪心算法
-    bool is_gbgs_;
-    // 周围的8个格子和访问它们的代价
-    const std::vector<Node> nearby_8 = {{0, 1, 1.0},           {1, 0, 1.0},           {0, -1, 1.0},
-                                        {-1, 0, 1.0},          {1, 1, std::sqrt(2)},  {1, -1, std::sqrt(2)},
-                                        {-1, 1, std::sqrt(2)}, {-1, -1, std::sqrt(2)}};
+    bool is_dijkstra_;  // using diksktra
+    bool is_gbfs_;      // using greedy best first search(GBFS)
+
+    using Node = mp::path_planner::common::Node<int>;
+    const std::vector<Node> motions = {
+        {0, 1, 1.0},          {1, 0, 1.0},           {0, -1, 1.0},          {-1, 0, 1.0},
+        {1, 1, std::sqrt(2)}, {1, -1, std::sqrt(2)}, {-1, 1, std::sqrt(2)}, {-1, -1, std::sqrt(2)},
+    };
 };
 }  // namespace mp::path_planner

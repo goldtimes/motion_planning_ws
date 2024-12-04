@@ -31,7 +31,7 @@ bool PathPlanner::world2Map(double wx, double wy, double& mx, double& my) {
     }
     mx = (wx - costmap_->getOriginX()) / costmap_->getResolution();
     my = (wy - costmap_->getOriginY()) / costmap_->getResolution();
-    if (mx < costmap_->getSizeInCellsX() || my < costmap_->getSizeInCellsY()) {
+    if (mx < costmap_->getSizeInCellsX() && my < costmap_->getSizeInCellsY()) {
         return true;
     }
     return false;

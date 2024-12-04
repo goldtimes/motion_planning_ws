@@ -19,7 +19,7 @@ class PathPlanner {
    public:
     PathPlanner(costmap_2d::Costmap2DROS* costmap_ros)
         : factor_(0.5), map_size_(0), costmap_ros_(costmap_ros), costmap_(costmap_ros->getCostmap()) {
-        map_size_ = static_cast<int>(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY());
+        map_size_ = static_cast<int>(costmap_->getSizeInCellsX() * costmap_->getSizeInCellsY());
     }
 
     virtual ~PathPlanner() = default;

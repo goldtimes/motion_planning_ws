@@ -51,6 +51,7 @@ void PathPlannerNode::initialize(std::string name) {
         }
 
         ROS_INFO("Using global path planner:%s", planner_name_.c_str());
+        g_planner_->setFactor(factor_);
 
         plan_pub_ = priv_nh.advertise<nav_msgs::Path>("plan", 1);
         tree_pub_ = priv_nh.advertise<visualization_msgs::MarkerArray>("random_tree", 1);
@@ -102,6 +103,9 @@ bool PathPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const ge
                   frame_id_.c_str(), start.header.frame_id.c_str());
         return false;
     }
+    ROS_INFO("[PathPlannerNode] start x:%f, start y: %f, goal x: %f, goal y:%f", start.pose.position.x,
+             start.pose.position.y, goal.pose.position.x, goal.pose.position.y);
+
     double wx = start.pose.position.x, wy = start.pose.position.y;
     double g_start_x, g_start_y, g_goal_x, g_goal_y;
     // 起始位姿不再地图当中
@@ -114,6 +118,7 @@ bool PathPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const ge
     }
     // 终点位姿不在地图中
     wx = goal.pose.position.x, wy = goal.pose.position.y;
+    // 将map坐标系下的m单位转换为栅格索引，并且判断是否超出了栅格
     if (!g_planner_->world2Map(wx, wy, g_goal_x, g_goal_y)) {
         ROS_WARN_THROTTLE(1.0,
                           "The goal sent to the global planner is off the global costmap. Planning will always fail to "
