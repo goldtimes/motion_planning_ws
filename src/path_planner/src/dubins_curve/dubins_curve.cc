@@ -9,6 +9,7 @@
 
 namespace dubins_curve {
 void DubinsCurve::InitPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg) {
+    std::cout << "InitPoseCallback" << std::endl;
     start_pose_.first.first = msg->pose.pose.position.x;
     start_pose_.first.second = msg->pose.pose.position.y;
     start_pose_.second = tf::getYaw(msg->pose.pose.orientation);
@@ -65,7 +66,8 @@ void DubinsCurve::GoalPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& m
 }
 
 void DubinsCurve::DubinsCurveProcess() {
-    ros::Rate rate(20);
+    // ROS_INFO("DubinsCurveProcess");
+    // std::cout << "DubinsCurveProcess" << std::endl;
     // 用于可视化的一些信息
     std::pair<std::array<std::string, 3>, std::pair<std::string, std::array<double, 3>>> marker_info[4] = {
         std::make_pair(std::array<std::string, 3>{"left", "straight", "left"},
@@ -85,6 +87,7 @@ void DubinsCurve::DubinsCurveProcess() {
     }
     while (ros::ok()) {
         ros::spinOnce();
+
         // 得到了目标点
         if (get_goal_target_ && get_init_pose_) {
             // 重置标志位
@@ -114,7 +117,7 @@ void DubinsCurve::DubinsCurveProcess() {
                 }
             }
         }
-        rate.sleep();
+        // rate.sleep();
     }
 }
 // 计算4条dubins 曲线
@@ -141,9 +144,9 @@ std::array<curve_type, 4> DubinsCurve::DubinsCurveSolver(int& index) {
 curve_type DubinsCurve::LSLCurve() {
     // 两个圆心的向量
     // 圆心2->圆心1的向量
-    auto center_line = dubins_tool_->GetDiffVec(left_center1, left_center2);
+    auto center_line = dubins_tool_->GetDiffVec(left_center2, left_center1);
     // 向量的中心
-    double R = dubins_tool_->GetDistance(left_center1, left_center2) / 2;
+    double R = dubins_tool_->GetDistance(left_center2, left_center1) / 2;
     // - acos(0) 这个具体要作图算出 https://zhuanlan.zhihu.com/p/673466180
     double theta = std::atan2(center_line[1], center_line[0]) - acos(0);
     // 计算两个切点
@@ -151,7 +154,7 @@ curve_type DubinsCurve::LSLCurve() {
     dubins_tool_->CoordTransform(left_center1, theta, radius_, 0, "left", tangent_pos1);
     dubins_tool_->CoordTransform(left_center2, theta, radius_, 0, "left", tangent_pos2);
 
-    std::array<point_type, 4> lsl_path = {left_center1, tangent_pos1, left_center2, tangent_pos2};
+    std::array<point_type, 4> lsl_path = {left_center1, tangent_pos1, tangent_pos2, left_center2};
     return std::make_pair(lsl_path, GetDubinsCurveLength(left_center1, left_center2, tangent_pos1, tangent_pos2,
                                                          std::array<std::string, 3>{"left", "stright", "left"}));
 }

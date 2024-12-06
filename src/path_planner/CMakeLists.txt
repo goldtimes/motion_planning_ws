@@ -49,3 +49,14 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
+
+
+add_executable(dubins_curve_test
+  test/dubins_curve_test.cc
+  src/dubins_curve/dubins_curve.cc
+  src/dubins_curve/dubins_tools.cc
+  
+  )
+target_link_libraries(dubins_curve_test
+  ${catkin_LIBRARIES}
+)

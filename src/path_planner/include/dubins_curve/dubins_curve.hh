@@ -15,8 +15,8 @@ class DubinsCurve {
         init_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("init_pose_marker", 1);
         goal_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("goal_pose_marker", 1);
         // 监听
-        init_pose_sub_ = nh_.subscribe("/initialpose", 1, &DubinsCurve::InitPoseCallback, this);
-        goal_pose_sub_ = nh_.subscribe("/move_base_simple/goal", 1, &DubinsCurve::GoalPoseCallback, this);
+        init_pose_sub_ = nh_.subscribe("/initialpose", 10, &DubinsCurve::InitPoseCallback, this);
+        goal_pose_sub_ = nh_.subscribe("/move_base_simple/goal", 10, &DubinsCurve::GoalPoseCallback, this);
     }
     ~DubinsCurve() = default;
 
