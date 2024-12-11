@@ -129,7 +129,7 @@ class Node {
         };
     };
 
-   private:
+   protected:
     // 栅格的x,y值
     T x_;
     T y_;
