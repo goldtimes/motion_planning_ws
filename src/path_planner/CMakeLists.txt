@@ -14,13 +14,14 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
   tf2_geometry_msgs
   tf2_ros
+  nav_common
 )
 
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES global_planner
- CATKIN_DEPENDS roscpp rospy
+#  LIBRARIES global_planner
+ CATKIN_DEPENDS roscpp rospy nav_common
 )
 
 
@@ -28,7 +29,7 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
+  
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}

@@ -2,7 +2,6 @@
 #include <cmath>
 #include "dubins_curve/dubins_curve.hh"
 #include "path_planner/graph_planner/astar_planner.hh"
-#include "path_planner/math_utils.hh"
 
 namespace mp::path_planner {
 namespace {
@@ -62,7 +61,7 @@ HybridAStarPathPlanner::HybridNode HybridAStarPathPlanner::HybridNode::operator+
 
     result.x_ = x_ + n.x_ * cos(theta_) - n.y_ * sin(theta_);
     result.y_ = y_ + n.x_ * sin(theta_) + n.y_ * cos(theta_);
-    result.theta_ = mp::path_planner::math::mod2pi(theta_ + n.theta_);
+    // result.theta_ = mp::path_planner::math::mod2pi(theta_ + n.theta_);
     result.prim_ = n.prim_;
     // forward driving
     if (prim_ < 3) {

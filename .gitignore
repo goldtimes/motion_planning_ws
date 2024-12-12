@@ -1,6 +1,7 @@
 src/liom_local_planner
 build
 devel
+install
 ros_motion_planning
 src/turtlebot3
 src/turtlebot3_simulations

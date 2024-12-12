@@ -12,6 +12,7 @@
     <buildtool_depend>catkin</buildtool_depend>
     <exec_depend>path_planner</exec_depend>
     <exec_depend>dwa_controller</exec_depend>
+    <exec_depend>nav_common</exec_depend>
     <export>
         <metapackage/>
     </export>

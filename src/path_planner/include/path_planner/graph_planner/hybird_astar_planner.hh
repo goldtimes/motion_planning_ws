@@ -1,10 +1,10 @@
 #include <memory>
 #include <unordered_map>
 #include "dubins_curve/dubins_curve.hh"
+#include "nav_common/geometry/curve.hh"
 #include "path_planner/graph_planner/astar_planner.hh"
-#include "path_planner/math_utils.hh"
 #include "path_planner/path_planner.hh"
-
+// #include "nav"
 namespace mp::path_planner {
 class HybridAStarPathPlanner : public PathPlanner {
    public:
