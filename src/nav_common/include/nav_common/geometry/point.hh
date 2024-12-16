@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 
-namespace mp::path_planner::common {
+namespace mp::common::geometry {
 template <typename T>
 class Point2_ {
    public:
@@ -110,4 +110,4 @@ using Point3d = Point3_<double>;
 using Points3i = std::vector<Point3i>;
 using Points3f = std::vector<Point3f>;
 using Points3d = std::vector<Point3d>;
-}  // namespace mp::path_planner::common
+}  // namespace mp::common::geometry

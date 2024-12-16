@@ -5,8 +5,8 @@
 #include <mutex>
 #include "costmap_2d/costmap_2d.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "nav_common/util/visualizer.hh"
 #include "path_planner/graph_planner/astar_planner.hh"
-#include "path_planner/visualizer.hh"
 #include "pluginlib/class_list_macros.hpp"
 #include "ros/time.h"
 
@@ -146,7 +146,7 @@ bool PathPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const ge
                 origin_plan.emplace_back(pt.pose.position.x, pt.pose.position.y);
             }
             // 可视化
-            const auto& visualizer = mp::path_planner::common::VisualizerPtr::Instance();
+            const auto& visualizer = mp::common::uitl::VisualizerPtr::Instance();
             if (is_expand_) {
                 if (planner_type_ == PLANNER_TYPE::GRAPH_PLANNER) {
                     // 发布expand地图

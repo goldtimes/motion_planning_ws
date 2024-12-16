@@ -5,16 +5,16 @@
 #include <ros/ros.h>
 #include <unordered_map>
 #include <vector>
-#include "node.hh"
-#include "point.hh"
+#include "nav_common/geometry/point.hh"
+#include "nav_common/structure/node.hh"
 
 namespace mp::path_planner {
 class PathPlanner {
    public:
-    using Point2d = mp::path_planner::common::Point2d;
-    using Point3d = mp::path_planner::common::Point3d;
-    using Points2d = mp::path_planner::common::Points2d;
-    using Points3d = mp::path_planner::common::Points3d;
+    using Point2d = mp::common::geometry::Point2d;
+    using Point3d = mp::common::geometry::Point3d;
+    using Points2d = mp::common::geometry::Points2d;
+    using Points3d = mp::common::geometry::Points3d;
 
    public:
     PathPlanner(costmap_2d::Costmap2DROS* costmap_ros)

@@ -29,7 +29,7 @@ class AstarGlobalPlanner : public PathPlanner {
     bool is_dijkstra_;  // using diksktra
     bool is_gbfs_;      // using greedy best first search(GBFS)
 
-    using Node = mp::path_planner::common::Node<int>;
+    using Node = mp::common::structure::Node<int>;
     const std::vector<Node> motions = {
         {0, 1, 1.0},          {1, 0, 1.0},           {0, -1, 1.0},          {-1, 0, 1.0},
         {1, 1, std::sqrt(2)}, {1, -1, std::sqrt(2)}, {-1, 1, std::sqrt(2)}, {-1, -1, std::sqrt(2)},

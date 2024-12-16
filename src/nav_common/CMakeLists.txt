@@ -24,13 +24,15 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
+file(GLOB util_src_files src/util/*.cpp)
+file(GLOB math_src_files_cpp src/math/*.cc)
 file(GLOB geometry_src_files src/geometry/*.cc)
+# file(GLOB safety_corridor_src_files src/safety_corridor/*.cpp)
+
 add_library(${PROJECT_NAME}
-  # ${math_src_fils}
-  # ${util_src_files}
-  # ${math_src_files_cpp}
+  ${math_src_fils}
+  ${util_src_files}
   ${geometry_src_files}
-  # ${safety_corridor_src_files}
 )
 
 add_dependencies(${PROJECT_NAME} 

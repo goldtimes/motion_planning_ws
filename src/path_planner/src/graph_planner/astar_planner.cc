@@ -6,7 +6,6 @@
 #include <vector>
 #include "costmap_2d/cost_values.h"
 #include "path_planner/path_planner.hh"
-#include "ros/console.h"
 
 namespace mp::path_planner {
 

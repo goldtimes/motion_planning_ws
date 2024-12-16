@@ -4,7 +4,7 @@ A*是一种启发式的搜索，和dijkstra是一种没有启发的搜索，也�
 */
 #pragma once
 
-namespace mp::path_planner::common {
+namespace mp::common::structure {
 
 template <typename T>
 class Node {
@@ -140,4 +140,4 @@ class Node {
     int id_;
     int parent_id_;
 };
-}  // namespace mp::path_planner::common
+}  // namespace mp::common::structure

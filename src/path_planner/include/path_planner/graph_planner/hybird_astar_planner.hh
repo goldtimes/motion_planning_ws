@@ -8,7 +8,7 @@
 namespace mp::path_planner {
 class HybridAStarPathPlanner : public PathPlanner {
    public:
-    using Node = mp::path_planner::common::Node<double>;
+    using Node = mp::common::structure::Node<double>;
     class HybridNode : public Node {
        public:
         /**

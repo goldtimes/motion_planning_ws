@@ -5,17 +5,17 @@
 #include <std_msgs/ColorRGBA.h>
 #include <visualization_msgs/MarkerArray.h>
 #include "costmap_2d/costmap_2d.h"
-#include "path_planner/point.hh"
-#include "path_planner/singleton.hh"
+#include "nav_common/geometry/point.hh"
+#include "nav_common/structure/singleton.hh"
 #include "ros/publisher.h"
 
-namespace mp::path_planner::common {
+namespace mp::common::uitl {
 class Visualizer {
    public:
-    using Point2d = mp::path_planner::common::Point2d;
-    using Points2d = mp::path_planner::common::Points2d;
-    using Point3d = mp::path_planner::common::Point3d;
-    using Points3d = mp::path_planner::common::Points3d;
+    using Point2d = mp::common::geometry ::Point2d;
+    using Points2d = mp::common::geometry ::Points2d;
+    using Point3d = mp::common::geometry ::Point3d;
+    using Points3d = mp::common::geometry ::Points3d;
     using Line2d = std::pair<Point2d, Point2d>;
     using Lines2d = std::vector<Line2d>;
 
@@ -97,4 +97,4 @@ class Visualizer {
 };
 using VisualizerPtr = mp::path_planner::common::Singleton<Visualizer>;
 
-}  // namespace mp::path_planner::common
+}  // namespace mp::common::uitl

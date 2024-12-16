@@ -1,6 +1,6 @@
-#include "path_planner/visualizer.hh"
+#include "nav_common/util/visualizer.hh"
 
-namespace mp::path_planner::common {
+namespace mp::common::uitl {
 // static 声明
 std_msgs::ColorRGBA Visualizer::RED = Visualizer::_colorInit(1.0, 0.0, 0.0, 1.0);
 std_msgs::ColorRGBA Visualizer::DARK_GREEN = Visualizer::_colorInit(0.43, 0.54, 0.24, 0.5);
@@ -14,4 +14,4 @@ std_msgs::ColorRGBA Visualizer::_colorInit(double r, double g, double b, double 
     color.a = a;
     return color;
 }
-}  // namespace mp::path_planner::common
+}  // namespace mp::common::uitl
