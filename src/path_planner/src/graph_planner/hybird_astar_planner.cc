@@ -165,16 +165,50 @@ bool HybridAStarPathPlanner::plan(const Point3d& start, const Point3d& goal, Poi
 
         closed_list.insert(std::make_pair(current.id(), current));
         expand.emplace_back(current.x(), current.y());
-        // dubins曲线
-
+        // dubins曲线 goal-shot
         std::vector<HybridNode> path_dubins;
         // 斜边长 < 50m
         if (std::hypot(current.x() - goal.x(), current.y() - goal.y()) < 50) {
-            // 生成dubins曲线
+            // 命中了目标
             if (dubinsShot(current, goal_node, path_dubins)) {
+                // 反向遍历得到路径
+                const auto& backtrace = _convertClosedListToPath(closed_list, start_node, current);
+                for (auto iter = backtrace.rbegin(); iter != backtrace.rend(); ++iter) {
+                    path.emplace_back(iter->x(), iter->y());
+                }
+                for (const auto& dubins_pt : path_dubins) {
+                    path.emplace_back(dubins_pt.x(), dubins_pt.y());
+                }
+                return true;
             }
         }
+        // 探索其他node
+        for (size_t i = 0; i < dir; ++i) {
+            HybridNode node_new = current + motions[i];
+            updateIndex(node_new);
+            if (closed_list.find(node_new.id()) != closed_list.end()) {
+                continue;
+            }
+            // next node hit the boundary or obstacle
+            // prevent planning failed when the current within inflation
+            if ((_worldToIndex(node_new.x(), node_new.y()) < 0) ||
+                (_worldToIndex(node_new.x(), node_new.y()) >= map_size_) ||
+                (node_new.theta() / kDeltaHeading >= kHeadings) ||
+                (costmap_->getCharMap()[_worldToIndex(node_new.x(), node_new.y())] >=
+                     costmap_2d::LETHAL_OBSTACLE * factor_ &&
+                 costmap_->getCharMap()[_worldToIndex(node_new.x(), node_new.y())] >=
+                     costmap_->getCharMap()[_worldToIndex(current.x(), current.y())]))
+                continue;
+            node_new.set_pid(current.id());
+            updateHeuristic(node_new);
+            open_list.push(node_new);
+        }
     }
+    return a_star_planner_->plan(start, goal, path, expand);
+}
+
+void HybridAStarPathPlanner::updateHeuristic(HybridNode& node) {
+    
 }
 
 // 同A*的启发函数一样
@@ -189,6 +223,30 @@ void HybridAStarPathPlanner::genHeurisiticMap(const Node& start) {
         auto current = open_list.top();
         open_list.pop();
         h_map_.emplace(current.id(), current);
+        // 探索周围的格子
+        for (const auto& motion : motions) {
+            auto node_new = current + motion;
+            node_new.set_g(current.g() + motion.g());
+            node_new.set_id(grid2Index(node_new.x(), node_new.y()));
+            // 如果该node被访问了
+            if (h_map_.find(node_new.id()) != h_map_.end()) {
+                continue;
+            }
+            if (node_new.id() < 0 || node_new.id() >= map_size_) {
+                continue;
+            }
+            //添加过了open_set
+            if (open_set.find(node_new.id()) != open_set.end()) {
+                // 更新g代价值
+                if (open_set[node_new.id()].g() > node_new.g()) {
+                    open_set[node_new.id()].set_g(node_new.g());
+                }
+            } else {
+                // 否则
+                open_list.push(node_new);
+                open_set.emplace(node_new.id(), node_new);
+            }
+        }
     }
 }
 
