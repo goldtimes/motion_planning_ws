@@ -105,7 +105,8 @@ bool PathPlannerNode::makePlan(const geometry_msgs::PoseStamped& start, const ge
     }
     ROS_INFO("[PathPlannerNode] start x:%f, start y: %f, goal x: %f, goal y:%f", start.pose.position.x,
              start.pose.position.y, goal.pose.position.x, goal.pose.position.y);
-
+    // 在rviz中map作为世界坐标系，我们下发的目标都是在这个坐标系下的。我们的目标可以无限远，
+    // 所以要判断这个目标点是否超出了全局地图的大小，而全局地图的原点为左下角
     double wx = start.pose.position.x, wy = start.pose.position.y;
     double g_start_x, g_start_y, g_goal_x, g_goal_y;
     // 起始位姿不再地图当中

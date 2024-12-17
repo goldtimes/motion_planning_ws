@@ -1,5 +1,6 @@
 #include "path_planner/graph_planner/hybird_astar_planner.hh"
 #include <cmath>
+#include <vector>
 #include "dubins_curve/dubins_curve.hh"
 #include "path_planner/graph_planner/astar_planner.hh"
 
@@ -122,9 +123,82 @@ HybridAStarPathPlanner::HybridAStarPathPlanner(costmap_2d::Costmap2DROS* costmap
     : PathPlanner(costmap_ros),
       is_reverse_(is_reverse),
       max_curv_(max_curv),
-      //   dubins_gen_(std::make_unique<dubins_curve::DubinsCurve>(1.5, max_curv)),
+      dubins_gen_(std::make_unique<mp::common::geometry::DubinsCurve>(1.5, max_curv)),
       a_star_planner_(std::make_unique<AstarGlobalPlanner>(costmap_ros)),
       goal_(HybridNode()) {
 }
 
+bool HybridAStarPathPlanner::plan(const Point3d& start, const Point3d& goal, Points3d& path, Points3d& expand) {
+    path.clear();
+    expand.clear();
+    HybridNode start_node(start.x(), start.y(), start.theta());
+    HybridNode goal_node(goal.x(), goal.y(), goal.theta());
+    updateIndex(start_node);
+    updateIndex(goal_node);
+    // update heuristic map
+    // 混合A*的算法，会利用A*的启发函数方式，计算待障碍物但是没有运行学约束的由目标点向周围拓展的代价图
+    if (goal_ != goal_node) {
+        goal_.set_x(goal.x());
+        goal_.set_y(goal.y());
+        goal_.set_theta(goal.theta());
+        double gx, gy;
+        world2Map(goal.x(), goal.y(), gx, gy);
+        HybridNode h_start(gx, gy, 0, 0, 0, grid2Index(gx, gy), 0);
+        genHeurisiticMap(h_start);
+    }
+    // 是否允许方向运动
+    int dir = is_reverse_ ? 6 : 3;
+    // 运动
+    const std::vector<HybridNode> motions = HybridNode::getMotion();
+    // open_list和closed_list
+    std::priority_queue<HybridNode, std::vector<HybridNode>, HybridNode::compare_cost> open_list;
+    std::unordered_map<int, HybridNode> closed_list;
+
+    open_list.push(start_node);
+    while (!open_list.empty()) {
+        HybridNode current = open_list.top();
+        open_list.pop();
+
+        if (closed_list.find(current.id()) != closed_list.end()) {
+            continue;
+        }
+
+        closed_list.insert(std::make_pair(current.id(), current));
+        expand.emplace_back(current.x(), current.y());
+        // dubins曲线
+
+        std::vector<HybridNode> path_dubins;
+        // 斜边长 < 50m
+        if (std::hypot(current.x() - goal.x(), current.y() - goal.y()) < 50) {
+            // 生成dubins曲线
+            if (dubinsShot(current, goal_node, path_dubins)) {
+            }
+        }
+    }
+}
+
+// 同A*的启发函数一样
+void HybridAStarPathPlanner::genHeurisiticMap(const Node& start) {
+    // open list and closed list
+    std::priority_queue<Node, std::vector<Node>, Node::compare_cost> open_list;
+    std::unordered_map<int, Node> open_set;
+    open_list.push(start);
+    open_set.emplace(start.id(), start);
+    // 遍历open_list
+    while (!open_list.empty()) {
+        auto current = open_list.top();
+        open_list.pop();
+        h_map_.emplace(current.id(), current);
+    }
+}
+
+void HybridAStarPathPlanner::updateIndex(HybridNode& node) {
+    node.set_id(static_cast<int>(node.theta() / kDeltaHeading) + _worldToIndex(node.x(), node.y()));
+}
+
+int HybridAStarPathPlanner::_worldToIndex(double wx, double wy) {
+    double gx, gy;
+    world2Map(wx, wy, gx, gy);
+    return grid2Index(gx, gy);
+}
 }  // namespace mp::path_planner

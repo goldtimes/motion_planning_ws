@@ -1,7 +1,6 @@
 #include <memory>
 #include <unordered_map>
-#include "dubins_curve/dubins_curve.hh"
-#include "nav_common/geometry/curve.hh"
+#include "nav_common/geometry/dubins_curve.hh"
 #include "path_planner/graph_planner/astar_planner.hh"
 #include "path_planner/path_planner.hh"
 // #include "nav"
@@ -107,6 +106,19 @@ class HybridAStarPathPlanner : public PathPlanner {
      */
     void genHeurisiticMap(const Node& start);
 
+   protected:
+    int _worldToIndex(double wx, double wy);
+
+    /**
+     * @brief Convert closed list to path
+     * @param closed_list closed list
+     * @param start       start node
+     * @param goal        goal node
+     * @return vector containing path nodes
+     */
+    std::vector<HybridNode> _convertClosedListToPath(std::unordered_map<int, HybridNode>& closed_list,
+                                                     const HybridNode& start, const HybridNode& goal);
+
    private:
     HybridNode goal_;
     // h cost
@@ -118,6 +130,6 @@ class HybridAStarPathPlanner : public PathPlanner {
     // A* planner
     std::unique_ptr<AstarGlobalPlanner> a_star_planner_;
     // dubins曲线生成
-    std::unique_ptr<dubins_curve::DubinsCurve> dubins_gen_;
+    std::unique_ptr<mp::common::geometry::DubinsCurve> dubins_gen_;
 };
 }  // namespace mp::path_planner
