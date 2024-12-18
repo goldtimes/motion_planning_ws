@@ -166,8 +166,9 @@ bool HybridAStarPathPlanner::plan(const Point3d& start, const Point3d& goal, Poi
         closed_list.insert(std::make_pair(current.id(), current));
         expand.emplace_back(current.x(), current.y());
         // dubins曲线 goal-shot
+        // hybrid算法的Analytic Expansions的思想,在搜索的过程，斜边长 < 50m
+        // 才使用dubins曲线来加快搜索，如果dubins曲线命中了目标则提前退出了
         std::vector<HybridNode> path_dubins;
-        // 斜边长 < 50m
         if (std::hypot(current.x() - goal.x(), current.y() - goal.y()) < 50) {
             // 命中了目标
             if (dubinsShot(current, goal_node, path_dubins)) {
@@ -199,19 +200,49 @@ bool HybridAStarPathPlanner::plan(const Point3d& start, const Point3d& goal, Poi
                  costmap_->getCharMap()[_worldToIndex(node_new.x(), node_new.y())] >=
                      costmap_->getCharMap()[_worldToIndex(current.x(), current.y())]))
                 continue;
+            // 不是障碍物，更新h代价值
             node_new.set_pid(current.id());
             updateHeuristic(node_new);
             open_list.push(node_new);
         }
     }
+    // 如果bubins曲线没有命中，则调用astar规划路径
     return a_star_planner_->plan(start, goal, path, expand);
 }
 
+// 调用曲线判断命中目标
+bool HybridAStarPathPlanner::dubinsShot(const HybridNode& start, const HybridNode& goal,
+                                        std::vector<HybridNode>& path) {
+    double sx, sy, gx, gy;
+    world2Map(start.x(), start.y(), sx, sy);
+    world2Map(goal.x(), goal.y(), gx, gy);
+    mp::common::geometry::Points3d poses = {{sx, sy, start.theta()}, {gx, gy, goal.theta()}};
+    mp::common::geometry::Points2d path_dubins;
+    // 正确生成了曲线
+    if (dubins_gen_->run(poses, path_dubins)) {
+        path.clear();
+        // 遍历所有的曲线点,如果遇见了障碍物，则曲线是失败的
+        for (auto const& p : path_dubins) {
+            if (costmap_->getCharMap()[grid2Index(p.x(), p.y())] >= costmap_2d::LETHAL_OBSTACLE * factor_)
+                return false;
+            else
+                path.emplace_back(p.x(), p.y());
+        }
+        // 没有碰到障碍物
+        return true;
+    } else
+        return false;
+}
+
+// 更新node的h值
 void HybridAStarPathPlanner::updateHeuristic(HybridNode& node) {
-    
+    double cost_dubins = 0.0;
+    double cost_2d = h_map_[_worldToIndex(node.x(), node.y())].g() * costmap_->getResolution();
+    node.set_h(std::max(cost_2d, cost_dubins));
 }
 
 // 同A*的启发函数一样
+// 从目标点出发，往前生成代价图
 void HybridAStarPathPlanner::genHeurisiticMap(const Node& start) {
     // open list and closed list
     std::priority_queue<Node, std::vector<Node>, Node::compare_cost> open_list;
