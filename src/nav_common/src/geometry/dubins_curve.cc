@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <cassert>
 #include <climits>
+#include <cmath>
 #include <iostream>
 #include <limits>
 
@@ -104,9 +105,59 @@ Points2d DubinsCurve::generation(Point3d start, Point3d goal) {
     if (best_cost == std::numeric_limits<double>::max()) {
         return path;
     }
+    // interpolation
+    int points_num = int(best_cost / step_) + 6;
+    std::vector<double> path_x(points_num);
+    std::vector<double> path_y(points_num);
+    std::vector<double> path_yaw(points_num, alpha);
+
+    std::vector<int> mode_v = {std::get<0>(best_mode), std::get<1>(best_mode), std::get<2>(best_mode)};
+    std::vector<double> length_v = {std::get<0>(best_length), std::get<1>(best_length), std::get<2>(best_length)};
+
+    // 分三段去采样
+    int i = 0;
+    for (int j = 0; i < 3; ++j) {
+        // 第一段圆弧的模式L,S,R
+        int mode = mode_v[j];
+        double seg_length = length_v[j];
+        double delta_l = seg_length > 0.0 ? step_ : -step_;
+        double x = path_x[i];
+        double y = path_y[i];
+        double yaw = path_yaw[i];
+        double l = delta_l;
+        while (fabs(l) < fabs(seg_length)) {
+            i += 1;
+            auto inter_pose = interpolate(mode, l, {x, y, yaw});
+            path_x[i] = inter_pose.x(), path_y[i] = inter_pose.y(), path_yaw[i] = inter_pose.theta();
+            l += delta_l;
+        }
+        i += 1;
+        auto inter_pose = interpolate(mode, l, {x, y, yaw});
+        path_x[i] = inter_pose.x(), path_y[i] = inter_pose.y(), path_yaw[i] = inter_pose.theta();
+    }
+    // remove unused data 最后的0.0点
+    while ((path_x.size() >= 1) && (path_x.back() == 0.0)) {
+        path_x.pop_back();
+        path_y.pop_back();
+        path_yaw.pop_back();
+    }
+    // coordinate transformation
+    Eigen::AngleAxisd r_vec(theta, Eigen::Vector3d(0, 0, 1));
+    Eigen::Matrix3d R = r_vec.toRotationMatrix();
+    Eigen::MatrixXd P = Eigen::MatrixXd::Ones(3, path_x.size());
+
+    for (size_t i = 0; i < path_x.size(); i++) {
+        P(0, i) = path_x[i];
+        P(1, i) = path_y[i];
+    }
+    P = R * P;
+
+    for (size_t i = 0; i < path_x.size(); i++) path.push_back({P(0, i) + sx, P(1, i) + sy});
+
+    return path;
 }
 
-// cost的计算是越大越好？
+// cost开始设置为最大值
 void DubinsCurve::_update(DubinsLength length, DubinsMode mode, DubinsLength& best_length, DubinsMode& best_mode,
                           double& best_cost) {
     if (std::get<0>(length) != DUBINS_NONE) {
@@ -119,6 +170,35 @@ void DubinsCurve::_update(DubinsLength length, DubinsMode mode, DubinsLength& be
             best_cost = cost;
         }
     }
+}
+
+/**
+ * @brief Planning path interpolation.
+ * @param mode      motion, i.e., DUBINS_L, DUBINS_S, DUBINS_R
+ * @param length    Single step motion path length
+ * @param init_pose Initial pose (x, y, yaw)
+ * @return new_pose	New pose (new_x, new_y, new_yaw) after moving
+ */
+Point3d DubinsCurve::interpolate(int mode, double length, Point3d init_pose) {
+    double x = init_pose.x(), y = init_pose.y(), yaw = init_pose.theta();
+    double new_x, new_y, new_yaw;
+
+    if (mode == DUBINS_S) {
+        new_x = x + length / max_curv_ * cos(yaw);
+        new_y = y + length / max_curv_ * sin(yaw);
+        new_yaw = yaw;
+    } else if (mode == DUBINS_L) {
+        new_x = x + (sin(yaw + length) - sin(yaw)) / max_curv_;
+        new_y = y - (cos(yaw + length) - cos(yaw)) / max_curv_;
+        new_yaw = yaw + length;
+    } else if (mode == DUBINS_R) {
+        new_x = x - (sin(yaw - length) - sin(yaw)) / max_curv_;
+        new_y = y + (cos(yaw - length) - cos(yaw)) / max_curv_;
+        new_yaw = yaw - length;
+    } else
+        std::cerr << "Error mode" << std::endl;
+
+    return {new_x, new_y, new_yaw};
 }
 
 }  // namespace mp::common::geometry
