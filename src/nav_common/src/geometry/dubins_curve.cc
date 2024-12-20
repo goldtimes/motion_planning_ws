@@ -11,11 +11,11 @@
 
 namespace mp::common::geometry {
 namespace {
-#define UNPACK_DUBINS_INPUT(alpha, beta) \
-    double sin_a = sin(alpha);           \
-    double sin_b = sin(beta);            \
-    double cos_a = cos(alpha);           \
-    double cos_b = cos(beta);            \
+#define UNPACK_DUBINS_INPUTS(alpha, beta) \
+    double sin_a = sin(alpha);            \
+    double sin_b = sin(beta);             \
+    double cos_a = cos(alpha);            \
+    double cos_b = cos(beta);             \
     double cos_a_b = cos(alpha - beta);
 }  // namespace
 enum {
@@ -31,6 +31,103 @@ DubinsCurve::DubinsCurve() : Curve(0.1), max_curv_(0.25) {
 }
 
 DubinsCurve::~DubinsCurve() {
+}
+
+void DubinsCurve::LSL(double alpha, double beta, double dist, DubinsLength& length, DubinsMode& mode) {
+    UNPACK_DUBINS_INPUTS(alpha, beta);
+    // 直线长度
+    double p_lsl = 2 + std::pow(dist, 2) - 2 * cos_a_b + 2 * dist * (sin_a - sin_b);
+    if (p_lsl < 0) {
+        length = {DUBINS_NONE, DUBINS_NONE, DUBINS_NONE};
+        mode = {DUBINS_L, DUBINS_R, DUBINS_L};
+    } else {
+        p_lsl = sqrt(p_lsl);
+        double t_lsl = mp::common::math::mod2pi(-alpha + atan2(cos_b - cos_a, dist + sin_a - sin_b));
+        double q_lsl = mp::common::math::mod2pi(beta - atan2(cos_b - cos_a, dist + sin_a - sin_b));
+        length = {t_lsl, p_lsl, q_lsl};
+        mode = {DUBINS_L, DUBINS_S, DUBINS_L};
+    }
+}
+
+void DubinsCurve::RSR(double alpha, double beta, double dist, DubinsLength& length, DubinsMode& mode) {
+    UNPACK_DUBINS_INPUTS(alpha, beta);
+    double p_rsr = 2 + std::pow(dist, 2) - 2 * cos_a_b + 2 * dist * (sin_b - sin_a);
+    if (p_rsr < 0) {
+        length = {DUBINS_NONE, DUBINS_NONE, DUBINS_NONE};
+        mode = {DUBINS_R, DUBINS_S, DUBINS_R};
+    } else {
+        p_rsr = sqrt(p_rsr);
+        double t_rsr = mp::common::math::mod2pi(alpha - atan2(cos_a - cos_b, dist - sin_a + sin_b));
+        double q_rsr = mp::common::math::mod2pi(-beta + atan2(cos_a - cos_b, dist - sin_a + sin_b));
+        length = {t_rsr, p_rsr, q_rsr};
+        mode = {DUBINS_R, DUBINS_S, DUBINS_R};
+    }
+}
+
+void DubinsCurve::LSR(double alpha, double beta, double dist, DubinsLength& length, DubinsMode& mode) {
+    UNPACK_DUBINS_INPUTS(alpha, beta);
+    double p_lsr = -2 + std::pow(dist, 2) + 2 * cos_a_b + 2 * dist * (sin_a + sin_b);
+
+    if (p_lsr < 0) {
+        length = {DUBINS_NONE, DUBINS_NONE, DUBINS_NONE};
+        mode = {DUBINS_L, DUBINS_S, DUBINS_R};
+    } else {
+        p_lsr = sqrt(p_lsr);
+        double t_lsr =
+            mp::common::math::mod2pi(-alpha + atan2(-cos_a - cos_b, dist + sin_a + sin_b) - atan2(-2.0, p_lsr));
+        double q_lsr =
+            mp::common::math::mod2pi(-beta + atan2(-cos_a - cos_b, dist + sin_a + sin_b) - atan2(-2.0, p_lsr));
+        length = {t_lsr, p_lsr, q_lsr};
+        mode = {DUBINS_L, DUBINS_S, DUBINS_R};
+    }
+}
+
+void DubinsCurve::RSL(double alpha, double beta, double dist, DubinsLength& length, DubinsMode& mode) {
+    UNPACK_DUBINS_INPUTS(alpha, beta);
+    double p_rsl = -2 + std::pow(dist, 2) + 2 * cos_a_b - 2 * dist * (sin_a + sin_b);
+
+    if (p_rsl < 0) {
+        length = {DUBINS_NONE, DUBINS_NONE, DUBINS_NONE};
+        mode = {DUBINS_R, DUBINS_S, DUBINS_L};
+    } else {
+        p_rsl = sqrt(p_rsl);
+        double t_rsl = mp::common::math::mod2pi(alpha - atan2(cos_a + cos_b, dist - sin_a - sin_b) + atan2(2.0, p_rsl));
+        double q_rsl = mp::common::math::mod2pi(beta - atan2(cos_a + cos_b, dist - sin_a - sin_b) + atan2(2.0, p_rsl));
+        length = {t_rsl, p_rsl, q_rsl};
+        mode = {DUBINS_R, DUBINS_S, DUBINS_L};
+    }
+}
+
+void DubinsCurve::RLR(double alpha, double beta, double dist, DubinsLength& length, DubinsMode& mode) {
+    UNPACK_DUBINS_INPUTS(alpha, beta);
+    double p_rlr = (6.0 - std::pow(dist, 2) + 2.0 * cos_a_b + 2.0 * dist * (sin_a - sin_b)) / 8.0;
+
+    if (fabs(p_rlr) > 1.0) {
+        length = {DUBINS_NONE, DUBINS_NONE, DUBINS_NONE};
+        mode = {DUBINS_R, DUBINS_L, DUBINS_R};
+    } else {
+        p_rlr = mp::common::math::mod2pi(2 * M_PI - acos(p_rlr));
+        double t_rlr = mp::common::math::mod2pi(alpha - atan2(cos_a - cos_b, dist - sin_a + sin_b) + p_rlr / 2.0);
+        double q_rlr = mp::common::math::mod2pi(alpha - beta - t_rlr + p_rlr);
+        length = {t_rlr, p_rlr, q_rlr};
+        mode = {DUBINS_R, DUBINS_L, DUBINS_R};
+    }
+}
+
+void DubinsCurve::LRL(double alpha, double beta, double dist, DubinsLength& length, DubinsMode& mode) {
+    UNPACK_DUBINS_INPUTS(alpha, beta);
+    double p_lrl = (6.0 - std::pow(dist, 2) + 2.0 * cos_a_b + 2.0 * dist * (sin_a - sin_b)) / 8.0;
+
+    if (fabs(p_lrl) > 1.0) {
+        length = {DUBINS_NONE, DUBINS_NONE, DUBINS_NONE};
+        mode = {DUBINS_L, DUBINS_R, DUBINS_L};
+    } else {
+        p_lrl = mp::common::math::mod2pi(2 * M_PI - acos(p_lrl));
+        double t_lrl = mp::common::math::mod2pi(-alpha + atan2(-cos_a + cos_b, dist + sin_a - sin_b) + p_lrl / 2.0);
+        double q_lrl = mp::common::math::mod2pi(beta - alpha - t_lrl + p_lrl);
+        length = {t_lrl, p_lrl, q_lrl};
+        mode = {DUBINS_L, DUBINS_R, DUBINS_L};
+    }
 }
 
 void DubinsCurve::setMaxCurv(double max_curv) {

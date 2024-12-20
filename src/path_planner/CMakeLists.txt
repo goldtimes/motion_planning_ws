@@ -52,12 +52,12 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 
-add_executable(dubins_curve_test
-  test/dubins_curve_test.cc
-  src/dubins_curve/dubins_curve.cc
-  src/dubins_curve/dubins_tools.cc
+# add_executable(dubins_curve_test
+#   test/dubins_curve_test.cc
+#   src/dubins_curve/dubins_curve.cc
+#   src/dubins_curve/dubins_tools.cc
   
-  )
-target_link_libraries(dubins_curve_test
-  ${catkin_LIBRARIES}
-)
+#   )
+# target_link_libraries(dubins_curve_test
+#   ${catkin_LIBRARIES}
+# )

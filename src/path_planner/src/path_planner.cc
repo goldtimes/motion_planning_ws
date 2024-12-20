@@ -26,7 +26,7 @@ void PathPlanner::index2Grid(int i, int& x, int& y) {
 // world to map
 bool PathPlanner::world2Map(double wx, double wy, double& mx, double& my) {
     // 超过了地图的范围
-    ROS_INFO("originx:%f,originy:%f", costmap_->getOriginX(), costmap_->getOriginY());
+    // ROS_INFO("originx:%f,originy:%f", costmap_->getOriginX(), costmap_->getOriginY());
     if (wx < costmap_->getOriginX() || wy < costmap_->getOriginY()) {
         return false;
     }

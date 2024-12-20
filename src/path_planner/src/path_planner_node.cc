@@ -7,6 +7,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "nav_common/util/visualizer.hh"
 #include "path_planner/graph_planner/astar_planner.hh"
+#include "path_planner/graph_planner/hybird_astar_planner.hh"
 #include "pluginlib/class_list_macros.hpp"
 #include "ros/time.h"
 
@@ -37,8 +38,10 @@ void PathPlannerNode::initialize(std::string name) {
         priv_nh.param("default_tolerance", tolerance_, 0.0);
         priv_nh.param("outlier_map", is_outlier_, false);
         priv_nh.param("obstacle_factor", factor_, 0.5);
-        priv_nh.param("expand_zone", is_expand_, false);
+        priv_nh.param("expand_zone", is_expand_, true);
         priv_nh.param("planner_name", planner_name_, static_cast<std::string>("a_star"));
+        ROS_WARN("global planner:%s", planner_name_.c_str());
+
         if (planner_name_ == "a_star") {
             g_planner_ = std::make_shared<AstarGlobalPlanner>(costmap_ros_);
             planner_type_ = PLANNER_TYPE::GRAPH_PLANNER;
@@ -47,6 +50,13 @@ void PathPlannerNode::initialize(std::string name) {
             planner_type_ = PLANNER_TYPE::GRAPH_PLANNER;
         } else if (planner_name_ == "gbfs") {
             g_planner_ = std::make_shared<AstarGlobalPlanner>(costmap_ros_, false, true);
+            planner_type_ = PLANNER_TYPE::GRAPH_PLANNER;
+        } else if (planner_name_ == "hybrid_a_star") {
+            bool is_reverse;  // whether reverse operation is allowed
+            double max_curv;  // maximum curvature of model
+            priv_nh.param("is_reverse", is_reverse, false);
+            priv_nh.param("max_curv", max_curv, 1.0);
+            g_planner_ = std::make_shared<HybridAStarPathPlanner>(costmap_ros_, is_reverse, max_curv);
             planner_type_ = PLANNER_TYPE::GRAPH_PLANNER;
         }
 
